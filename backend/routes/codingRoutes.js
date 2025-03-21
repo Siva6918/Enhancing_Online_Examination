@@ -4,6 +4,7 @@ import {
   createCodingQuestion,
   getCodingQuestions,
   getCodingQuestion,
+  getCodingQuestionsByExamId,
 } from "../controllers/codingController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -14,10 +15,11 @@ router.use(protect);
 
 // Student routes
 router.post("/submit", submitCodingAnswer);
+router.get("/questions/exam/:examId", getCodingQuestionsByExamId);
+
+// Teacher routes
+router.post("/question", createCodingQuestion);
 router.get("/questions", getCodingQuestions);
 router.get("/questions/:id", getCodingQuestion);
-
-// Teacher routes (require teacher role)
-router.post("/question", createCodingQuestion);
 
 export default router;

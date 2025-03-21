@@ -8,7 +8,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Stack,
 } from '@mui/material';
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CodingQuestionForm from './CodingQuestionForm';
 
 const CreateExam = ({ formik, title, subtitle, subtext }) => {
   const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik;
@@ -24,109 +27,95 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
       {subtext}
 
       <Box component="form">
-        <TextField
-          id="examName"
-          name="examName"
-          label="Exam Name"
-          variant="outlined"
-          value={values.examName}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.examName && errors.examName ? true : false}
-          helperText={touched.examName && errors.examName ? errors.examName : null}
-          fullWidth
-          required
-          margin="normal"
-        />
+        <Stack mb={3}>
+          <CustomTextField
+            id="examName"
+            name="examName"
+            label="Exam Name"
+            variant="outlined"
+            fullWidth
+            value={values.examName}
+            onChange={handleChange}
+            error={touched.examName && Boolean(errors.examName)}
+            helperText={touched.examName && errors.examName}
+          />
+        </Stack>
 
-        <TextField
-          id="totalQuestions"
-          name="totalQuestions"
-          label="Total Number of Questions"
-          type="number"
-          variant="outlined"
-          value={values.totalQuestions}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.totalQuestions && errors.totalQuestions ? true : false}
-          helperText={
-            touched.totalQuestions && errors.totalQuestions ? errors.totalQuestions : null
-          }
-          fullWidth
-          required
-          margin="normal"
-        />
+        <Stack mb={3}>
+          <CustomTextField
+            id="totalQuestions"
+            name="totalQuestions"
+            label="Total Number of Questions"
+            variant="outlined"
+            fullWidth
+            value={values.totalQuestions}
+            onChange={handleChange}
+            error={touched.totalQuestions && Boolean(errors.totalQuestions)}
+            helperText={touched.totalQuestions && errors.totalQuestions}
+          />
+        </Stack>
 
-        <TextField
-          id="duration"
-          name="duration"
-          label="Exam Duration (minutes)"
-          type="number"
-          variant="outlined"
-          value={values.duration}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.duration && errors.duration ? true : false}
-          helperText={touched.duration && errors.duration ? errors.duration : null}
-          fullWidth
-          required
-          margin="normal"
-        />
+        <Stack mb={3}>
+          <CustomTextField
+            id="duration"
+            name="duration"
+            label="Exam Duration (minutes)"
+            variant="outlined"
+            fullWidth
+            value={values.duration}
+            onChange={handleChange}
+            error={touched.duration && Boolean(errors.duration)}
+            helperText={touched.duration && errors.duration}
+          />
+        </Stack>
 
-        {/* <TextField
-          id="liveLink"
-          name="liveLink"
-          label="Live Link"
-          variant="outlined"
-          value={values.liveLink}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.liveLink && errors.liveLink ? true : false}
-          helperText={touched.liveLink && errors.liveLink ? errors.liveLink : null}
-          fullWidth
-          required
-          margin="normal"
-        /> */}
+        <Stack mb={3}>
+          <CustomTextField
+            id="liveDate"
+            name="liveDate"
+            label="Live Date and Time"
+            type="datetime-local"
+            variant="outlined"
+            fullWidth
+            value={values.liveDate}
+            onChange={handleChange}
+            error={touched.liveDate && Boolean(errors.liveDate)}
+            helperText={touched.liveDate && errors.liveDate}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Stack>
 
-        <TextField
-          id="liveDate"
-          name="liveDate"
-          label="Live Date and Time"
-          type="datetime-local"
-          variant="outlined"
-          value={values.liveDate}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.liveDate && errors.liveDate ? true : false}
-          helperText={touched.liveDate && errors.liveDate ? errors.liveDate : null}
-          fullWidth
-          required
-          margin="normal"
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+        <Stack mb={3}>
+          <CustomTextField
+            id="deadDate"
+            name="deadDate"
+            label="Dead Date and Time"
+            type="datetime-local"
+            variant="outlined"
+            fullWidth
+            value={values.deadDate}
+            onChange={handleChange}
+            error={touched.deadDate && Boolean(errors.deadDate)}
+            helperText={touched.deadDate && errors.deadDate}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Stack>
 
-        <TextField
-          id="deadDate"
-          name="deadDate"
-          label="Dead Date and Time"
-          type="datetime-local"
-          variant="outlined"
-          value={values.deadDate}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched.deadDate && errors.deadDate ? true : false}
-          helperText={touched.deadDate && errors.deadDate ? errors.deadDate : null}
-          fullWidth
-          required
-          margin="normal"
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+        <CodingQuestionForm formik={formik} />
 
-        <Button color="primary" variant="contained" size="large" fullWidth onClick={handleSubmit}>
+        <Button
+          color="primary"
+          variant="contained"
+          size="large"
+          fullWidth
+          type="submit"
+          disabled={formik.isSubmitting}
+          onClick={handleSubmit}
+        >
           Create Exam
         </Button>
       </Box>

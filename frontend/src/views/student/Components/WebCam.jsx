@@ -109,7 +109,7 @@ export default function Home({ cheatingLog, updateCheatingLog }) {
         if (element.class === 'book') {
           updateCheatingLog((prevLog) => ({
             ...prevLog,
-            ProhibitedObjectCount: prevLog.ProhibitedObjectCount + 1,
+            prohibitedObjectCount: prevLog.prohibitedObjectCount + 1,
           }));
           swal('Prohibited Object Detected', 'Action has been Recorded', 'error');
         }

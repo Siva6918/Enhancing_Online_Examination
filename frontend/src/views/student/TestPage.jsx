@@ -40,11 +40,21 @@ const TestPage = () => {
     noFaceCount: 0,
     multipleFaceCount: 0,
     cellPhoneCount: 0,
-    ProhibitedObjectCount: 0,
+    prohibitedObjectCount: 0,
     examId: examId,
-    username: '',
-    email: '',
+    username: userInfo?.name || '',
+    email: userInfo?.email || '',
   });
+
+  useEffect(() => {
+    if (userInfo) {
+      setCheatingLog((prev) => ({
+        ...prev,
+        username: userInfo.name,
+        email: userInfo.email,
+      }));
+    }
+  }, [userInfo]);
 
   useEffect(() => {
     if (data) {
@@ -54,30 +64,48 @@ const TestPage = () => {
 
   const handleTestSubmission = async () => {
     try {
-      setCheatingLog((prevLog) => ({
-        ...prevLog,
+      // Make sure we have the latest user info in the log
+      const updatedLog = {
+        ...cheatingLog,
         username: userInfo.name,
         email: userInfo.email,
-      }));
+        examId: examId,
+        noFaceCount: parseInt(cheatingLog.noFaceCount) || 0,
+        multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
+        cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
+        prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
+      };
 
-      await saveCheatingLog(cheatingLog);
+      console.log('Submitting cheating log:', updatedLog);
 
-      await saveCheatingLogMutation(cheatingLog).unwrap();
+      // Save the cheating log
+      const result = await saveCheatingLogMutation(updatedLog).unwrap();
+      console.log('Cheating log saved:', result);
 
-      toast.success('User Logs Saved!!');
-
-      navigate(`/Success`);
+      toast.success('Test submitted successfully!');
+      navigate('/Success');
     } catch (error) {
-      console.log('cheatlog: ', error);
+      console.error('Error saving cheating log:', error);
+      // Log more details about the error
+      if (error.data) {
+        console.error('Error details:', error.data);
+      }
+      if (error.status) {
+        console.error('Error status:', error.status);
+      }
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
+      toast.error(
+        error?.data?.message || error?.message || 'Failed to save test logs. Please try again.',
+      );
     }
   };
+
   const saveUserTestScore = () => {
     setScore(score + 1);
   };
 
-  const saveCheatingLog = async (cheatingLog) => {
-    console.log(cheatingLog);
-  };
   return (
     <PageContainer title="TestPage" description="This is TestPage">
       <Box pt="3rem">
