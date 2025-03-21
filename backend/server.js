@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 import examRoutes from "./routes/examRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import codingRoutes from "./routes/codingRoutes.js";
 import { exec } from "child_process";
 import fs from "fs";
 import { writeFileSync } from "fs";
@@ -60,6 +61,7 @@ app.post("/run-java", (req, res) => {
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/users", examRoutes);
+app.use("/api/coding", codingRoutes);
 
 // we we are deploying this in production
 // make frontend build then
