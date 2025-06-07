@@ -13,8 +13,19 @@ const saveCheatingLog = asyncHandler(async (req, res) => {
     examId,
     username,
     email,
-    screenshot,
+    screenshots,
   } = req.body;
+
+  console.log("Received cheating log data:", {
+    noFaceCount,
+    multipleFaceCount,
+    cellPhoneCount,
+    prohibitedObjectCount,
+    examId,
+    username,
+    email,
+    screenshots,
+  });
 
   const cheatingLog = new CheatingLog({
     noFaceCount,
@@ -24,10 +35,11 @@ const saveCheatingLog = asyncHandler(async (req, res) => {
     examId,
     username,
     email,
-    screenshot,
+    screenshots: screenshots || [],
   });
 
   const savedLog = await cheatingLog.save();
+  console.log("Saved cheating log:", savedLog);
 
   if (savedLog) {
     res.status(201).json(savedLog);

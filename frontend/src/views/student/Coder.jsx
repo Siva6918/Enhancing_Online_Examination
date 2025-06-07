@@ -101,6 +101,7 @@ export default function Coder() {
     console.log('Starting submission with questionId:', questionId);
     console.log('Current code:', code);
     console.log('Selected language:', language);
+    console.log('Current cheating log:', cheatingLog);
 
     if (!questionId) {
       toast.error('Question not loaded properly. Please try again.');
@@ -132,10 +133,12 @@ export default function Coder() {
             multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
             cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
             prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
+            screenshots: cheatingLog.screenshots || [], // Ensure screenshots array exists
           };
 
+          console.log('Saving cheating log with screenshots:', updatedLog);
+
           // Save the cheating log
-          console.log('Saving cheating log:', updatedLog);
           const logResult = await saveCheatingLogMutation(updatedLog).unwrap();
           console.log('Cheating log saved successfully:', logResult);
 
@@ -240,7 +243,7 @@ export default function Coder() {
             </Box>
 
             {/* Webcam Section */}
-            <Box sx={{ width: '400px' }}>
+            <Box sx={{ width: '320px', height: '240px', flexShrink: 0 }}>
               <Paper sx={{ height: '100%', overflow: 'hidden' }}>
                 <Webcam
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}

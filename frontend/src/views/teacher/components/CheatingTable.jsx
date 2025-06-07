@@ -13,14 +13,29 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  IconButton,
+  Tooltip,
+  Chip,
 } from '@mui/material';
 import { useGetExamsQuery } from 'src/slices/examApiSlice';
 import { useGetCheatingLogsQuery } from 'src/slices/cheatingLogApiSlice';
+import CloseIcon from '@mui/icons-material/Close';
+import ImageIcon from '@mui/icons-material/Image';
+import WarningIcon from '@mui/icons-material/Warning';
 
 export default function CheatingTable() {
   const [filter, setFilter] = useState('');
   const [selectedExamId, setSelectedExamId] = useState('');
   const [cheatingLogs, setCheatingLogs] = useState([]);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const { data: examsData, isLoading: examsLoading, error: examsError } = useGetExamsQuery();
   const {
@@ -33,22 +48,13 @@ export default function CheatingTable() {
 
   useEffect(() => {
     if (examsData && examsData.length > 0) {
-      // Set the first exam as default selection using examId
       const firstExam = examsData[0];
-      console.log('First exam data:', firstExam);
       setSelectedExamId(firstExam.examId);
     }
   }, [examsData]);
 
   useEffect(() => {
-    if (selectedExamId) {
-      console.log('Selected exam ID for fetching logs:', selectedExamId);
-    }
-  }, [selectedExamId]);
-
-  useEffect(() => {
     if (cheatingLogsData) {
-      console.log('Received cheating logs:', cheatingLogsData);
       setCheatingLogs(Array.isArray(cheatingLogsData) ? cheatingLogsData : []);
     }
   }, [cheatingLogsData]);
@@ -59,6 +65,28 @@ export default function CheatingTable() {
       log.email?.toLowerCase().includes(filter.toLowerCase()),
   );
 
+  const handleViewScreenshots = (log) => {
+    setSelectedLog(log);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedLog(null);
+  };
+
+  const getViolationColor = (count) => {
+    if (count > 5) return 'error';
+    if (count > 2) return 'warning';
+    return 'success';
+  };
+
+  const getViolationIcon = (count) => {
+    if (count > 5) return <WarningIcon color="error" />;
+    if (count > 2) return <WarningIcon color="warning" />;
+    return null;
+  };
+
   if (examsLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -68,7 +96,6 @@ export default function CheatingTable() {
   }
 
   if (examsError) {
-    console.error('Error loading exams:', examsError);
     return (
       <Box p={2}>
         <Typography color="error">
@@ -88,36 +115,33 @@ export default function CheatingTable() {
 
   return (
     <Box>
-      <Select
-        label="Select Exam"
-        value={selectedExamId || ''}
-        onChange={(e) => {
-          const newExamId = e.target.value;
-          console.log('Selecting new exam ID:', newExamId);
-          setSelectedExamId(newExamId);
-        }}
-        fullWidth
-        sx={{ mb: 2 }}
-      >
-        {examsData &&
-          examsData.map((exam) => {
-            console.log('Exam option:', exam);
-            return (
-              <MenuItem key={exam.examId} value={exam.examId}>
-                {exam.examName || 'Unnamed Exam'}
-              </MenuItem>
-            );
-          })}
-      </Select>
-
-      <TextField
-        label="Filter by Name or Email"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <Select
+              label="Select Exam"
+              value={selectedExamId || ''}
+              onChange={(e) => setSelectedExamId(e.target.value)}
+              fullWidth
+            >
+              {examsData.map((exam) => (
+                <MenuItem key={exam.examId} value={exam.examId}>
+                  {exam.examName || 'Unnamed Exam'}
+                </MenuItem>
+              ))}
+            </Select>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Filter by Name or Email"
+              variant="outlined"
+              fullWidth
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
 
       {logsLoading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -127,9 +151,6 @@ export default function CheatingTable() {
         <Box p={2}>
           <Typography color="error">
             Error loading logs: {logsError.data?.message || logsError.error || 'Unknown error'}
-          </Typography>
-          <Typography variant="body2" color="textSecondary" mt={1}>
-            Selected Exam ID: {selectedExamId}
           </Typography>
         </Box>
       ) : (
@@ -144,12 +165,13 @@ export default function CheatingTable() {
                 <TableCell>Multiple Face Count</TableCell>
                 <TableCell>Cell Phone Count</TableCell>
                 <TableCell>Prohibited Object Count</TableCell>
+                <TableCell>Screenshots</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={8} align="center">
                     No cheating logs found for this exam
                   </TableCell>
                 </TableRow>
@@ -159,10 +181,48 @@ export default function CheatingTable() {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{log.username}</TableCell>
                     <TableCell>{log.email}</TableCell>
-                    <TableCell>{log.noFaceCount}</TableCell>
-                    <TableCell>{log.multipleFaceCount}</TableCell>
-                    <TableCell>{log.cellPhoneCount}</TableCell>
-                    <TableCell>{log.prohibitedObjectCount}</TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getViolationIcon(log.noFaceCount)}
+                        label={log.noFaceCount}
+                        color={getViolationColor(log.noFaceCount)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getViolationIcon(log.multipleFaceCount)}
+                        label={log.multipleFaceCount}
+                        color={getViolationColor(log.multipleFaceCount)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getViolationIcon(log.cellPhoneCount)}
+                        label={log.cellPhoneCount}
+                        color={getViolationColor(log.cellPhoneCount)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getViolationIcon(log.prohibitedObjectCount)}
+                        label={log.prohibitedObjectCount}
+                        color={getViolationColor(log.prohibitedObjectCount)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="View Screenshots">
+                        <IconButton
+                          onClick={() => handleViewScreenshots(log)}
+                          disabled={!log.screenshots?.length}
+                        >
+                          <ImageIcon color={log.screenshots?.length ? 'primary' : 'disabled'} />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -170,6 +230,43 @@ export default function CheatingTable() {
           </Table>
         </TableContainer>
       )}
+
+      {/* Screenshots Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Screenshots - {selectedLog?.username}</Typography>
+            <IconButton onClick={handleCloseDialog}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2}>
+            {selectedLog?.screenshots?.map((screenshot, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Card>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={screenshot.url}
+                    alt={`Violation - ${screenshot.type}`}
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  <CardContent>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Type: {screenshot.type}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Detected: {new Date(screenshot.detectedAt).toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
