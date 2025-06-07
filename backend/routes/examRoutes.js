@@ -1,7 +1,11 @@
 import express from "express";
 
 import { protect } from "../middleware/authMiddleware.js";
-import { createExam, getExams } from "../controllers/examController.js";
+import {
+  createExam,
+  DeleteExamById,
+  getExams,
+} from "../controllers/examController.js";
 import {
   createQuestion,
   getQuestionsByExamId,
@@ -18,5 +22,6 @@ examRoutes.route("/exam/questions").post(protect, createQuestion);
 examRoutes.route("/exam/questions/:examId").get(protect, getQuestionsByExamId);
 examRoutes.route("/cheatingLogs/:examId").get(protect, getCheatingLogsByExamId);
 examRoutes.route("/cheatingLogs/").post(protect, saveCheatingLog);
+examRoutes.route("/exam/:examId").post(protect, DeleteExamById);
 
 export default examRoutes;

@@ -33,4 +33,15 @@ const createExam = asyncHandler(async (req, res) => {
   }
 });
 
-export { getExams, createExam };
+const DeleteExamById = asyncHandler(async (req, res) => {
+  const { examId } = req.params;
+  const exam = await Exam.findOneAndDelete({ examId: examId });
+  if (!exam) {
+    res.status(404);
+    throw new Error("Exam not found");
+  }
+  console.log("deleted exam", exam);
+  res.status(200).json(exam);
+});
+
+export { getExams, createExam, DeleteExamById };
