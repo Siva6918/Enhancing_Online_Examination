@@ -2,11 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 import axios from 'axios';
 import Webcam from '../student/Components/WebCam';
-import { Button } from '@mui/material';
+import {
+  Button,
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
 import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice'; // Adjust the import path
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router';
+import { useCheatingLog } from 'src/context/CheatingLogContext';
 
 export default function Coder() {
   const [code, setCode] = useState('// Write your code here...');
@@ -18,21 +29,12 @@ export default function Coder() {
   const { examId } = useParams();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
-  const [cheatingLog, setCheatingLog] = useState({
-    noFaceCount: 0,
-    multipleFaceCount: 0,
-    cellPhoneCount: 0,
-    prohibitedObjectCount: 0,
-    examId: examId,
-    username: userInfo?.name || '',
-    email: userInfo?.email || '',
-  });
-
+  const { cheatingLog, updateCheatingLog } = useCheatingLog();
   const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
 
   useEffect(() => {
     if (userInfo) {
-      setCheatingLog((prevLog) => ({
+      updateCheatingLog((prevLog) => ({
         ...prevLog,
         username: userInfo.name,
         email: userInfo.email,
@@ -126,6 +128,10 @@ export default function Coder() {
             username: userInfo.name,
             email: userInfo.email,
             examId: examId,
+            noFaceCount: parseInt(cheatingLog.noFaceCount) || 0,
+            multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
+            cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
+            prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
           };
 
           // Save the cheating log
@@ -137,13 +143,6 @@ export default function Coder() {
           navigate('/success');
         } catch (cheatingLogError) {
           console.error('Error saving cheating log:', cheatingLogError);
-          // Log more details about the error
-          if (cheatingLogError.data) {
-            console.error('Error details:', cheatingLogError.data);
-          }
-          if (cheatingLogError.status) {
-            console.error('Error status:', cheatingLogError.status);
-          }
           toast.error('Test submitted but failed to save monitoring logs');
           navigate('/success');
         }
@@ -160,66 +159,99 @@ export default function Coder() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Loading question...</div>
+        <Box sx={{ textAlign: 'center', p: 3 }}>Loading question...</Box>
       ) : !question ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
+        <Box sx={{ textAlign: 'center', p: 3 }}>
           No coding question found for this exam. Please contact your teacher.
-        </div>
+        </Box>
       ) : (
-        <>
-          <div style={{ marginBottom: '20px' }}>
-            <h3>{question.question}</h3>
-            <p>{question.description}</p>
-          </div>
+        <Grid container spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+          {/* Question Section */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h5" gutterBottom>
+                {question.question}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {question.description}
+              </Typography>
+            </Paper>
+          </Grid>
 
-          <select onChange={(e) => setLanguage(e.target.value)} value={language}>
-            <option value="javascript">JavaScript</option>
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-          </select>
+          {/* Main Content Area */}
+          <Grid item xs={12} sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 200px)' }}>
+            {/* Code Editor Section */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ mb: 2 }}>
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel>Language</InputLabel>
+                  <Select
+                    value={language}
+                    label="Language"
+                    onChange={(e) => setLanguage(e.target.value)}
+                  >
+                    <MenuItem value="javascript">JavaScript</MenuItem>
+                    <MenuItem value="python">Python</MenuItem>
+                    <MenuItem value="java">Java</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-          <div style={{ display: 'flex', position: 'relative' }}>
-            <Editor
-              height="450px"
-              width="900px"
-              language={language}
-              value={code}
-              onChange={(value) => setCode(value)}
-              theme="vs-dark"
-            />
-            <div style={{ position: 'absolute', right: '10px' }}>
-              <Webcam
-                style={{ height: '400px', width: '400px' }}
-                cheatingLog={cheatingLog}
-                updateCheatingLog={setCheatingLog}
-              />
-            </div>
-          </div>
+              <Box sx={{ flex: 1, minHeight: 0, height: 'calc(100% - 200px)' }}>
+                <Editor
+                  height="100%"
+                  language={language}
+                  value={code}
+                  onChange={(value) => setCode(value)}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                  }}
+                />
+              </Box>
 
-          <Button
-            variant="contained"
-            onClick={runCode}
-            style={{ marginTop: '20px', padding: '10px', marginRight: '10px' }}
-          >
-            Run Code
-          </Button>
+              {/* Output Section */}
+              <Paper sx={{ mt: 2, p: 2, height: '120px', overflow: 'auto' }}>
+                <Typography variant="h6" gutterBottom>
+                  Output:
+                </Typography>
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{output}</pre>
+              </Paper>
 
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            style={{ marginTop: '20px', padding: '10px' }}
-          >
-            Submit Test
-          </Button>
+              {/* Action Buttons */}
+              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                <Button variant="contained" onClick={runCode} sx={{ minWidth: 120 }}>
+                  Run Code
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSubmit}
+                  sx={{ minWidth: 120 }}
+                >
+                  Submit Test
+                </Button>
+              </Box>
+            </Box>
 
-          <div style={{ marginTop: '20px', backgroundColor: '#f0f0f0', padding: '10px' }}>
-            <h4>Output:</h4>
-            <pre>{output}</pre>
-          </div>
-        </>
+            {/* Webcam Section */}
+            <Box sx={{ width: '400px' }}>
+              <Paper sx={{ height: '100%', overflow: 'hidden' }}>
+                <Webcam
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  cheatingLog={cheatingLog}
+                  updateCheatingLog={updateCheatingLog}
+                />
+              </Paper>
+            </Box>
+          </Grid>
+        </Grid>
       )}
-    </div>
+    </Box>
   );
 }

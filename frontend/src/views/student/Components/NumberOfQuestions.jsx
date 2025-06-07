@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
 import questions from './questionData';
 import BlankCard from 'src/components/shared/BlankCard';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import Countdown from 'react-countdown';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
 const NumberOfQuestions = ({ questionLength, submitTest, examDurationInSeconds }) => {
-  const totalQuestions = questionLength; //questions.length;
-  // Generate an array of question numbers from 1 to totalQuestions
+  const totalQuestions = questionLength;
   const questionNumbers = Array.from({ length: totalQuestions }, (_, index) => index + 1);
-  const handleQuestionButtonClick = (questionNumber) => {
-    // Set the current question to the selected question number
-    // setCurrentQuestion(questionNumber);
-  };
+
+  const [timeLeft, setTimeLeft] = useState(examDurationInSeconds * 60); // Convert minutes to seconds
+  const navigate = useNavigate();
 
   // Create an array of rows, each containing up to 4 question numbers
   const rows = [];
@@ -20,43 +20,49 @@ const NumberOfQuestions = ({ questionLength, submitTest, examDurationInSeconds }
     rows.push(questionNumbers.slice(i, i + 5));
   }
 
-  // Timer related states
-  const [timer, setTimer] = useState(400); // Initialize timer with examDurationInSeconds
-  // Countdown timer
+  const handleQuestionButtonClick = (questionNumber) => {
+    // Set the current question to the selected question number
+    // setCurrentQuestion(questionNumber);
+  };
+
   useEffect(() => {
-    setTimer(400);
-    const countdown = setInterval(() => {
-      setTimer((prevTimer) => prevTimer - 1);
+    // Reset timer when exam duration changes
+    setTimeLeft(examDurationInSeconds * 60);
+  }, [examDurationInSeconds]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          handleTimeUp();
+          return 0;
+        }
+        return prevTime - 1;
+      });
     }, 1000);
 
-    // Check if the timer has reached 0
-    if (timer <= 0) {
-      clearInterval(countdown); // Stop the timer
-      submitTest(); // Automatically submit the test
-    }
+    return () => clearInterval(timer);
+  }, []);
 
-    return () => {
-      clearInterval(countdown); // Cleanup the timer when the component unmounts
-    };
-  }, []); // Empty dependency array to run this effect only once when the component mounts
+  const handleTimeUp = () => {
+    toast.warning('Time is up! Submitting your test...');
+    submitTest();
+  };
+
+  // Format time for display (MM:SS)
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <>
-      <Box
-        position="sticky"
-        top="0"
-        zIndex={1}
-        bgcolor="white" // Set background color as needed
-        paddingY="10px" // Add padding to top and bottom as needed
-        width="100%"
-        px={3}
-        // mb={5}
-      >
+      <Box position="sticky" top="0" zIndex={1} bgcolor="white" paddingY="10px" width="100%" px={3}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">Questions: 1/10</Typography>
-          <Typography variant="h6">
-            Time Left: {Math.floor(timer / 60)}:{timer % 60}
-          </Typography>
+          <Typography variant="h6">Questions: 1/{totalQuestions}</Typography>
+          <Typography variant="h6">Time Left: {formatTime(timeLeft)}</Typography>
           <Button variant="contained" onClick={submitTest} color="error">
             Finish Test
           </Button>

@@ -10,51 +10,35 @@ import { useGetExamsQuery, useGetQuestionsQuery } from '../../slices/examApiSlic
 import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Coder from './Coder';
+import { useCheatingLog } from 'src/context/CheatingLogContext';
 
 const TestPage = () => {
   const { examId, testId } = useParams();
-
-  const [selectedExam, setSelectedExam] = useState([]);
-  const [examDurationInSeconds, setexamDurationInSeconds] = useState(0);
-  const { data: userExamdata } = useGetExamsQuery();
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [examDurationInSeconds, setExamDurationInSeconds] = useState(0);
+  const { data: userExamdata, isLoading: isExamsLoading } = useGetExamsQuery();
+  const { userInfo } = useSelector((state) => state.auth);
+  const { cheatingLog, updateCheatingLog, resetCheatingLog } = useCheatingLog();
+  const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMcqCompleted, setIsMcqCompleted] = useState(false);
 
   useEffect(() => {
     if (userExamdata) {
-      const exam = userExamdata.filter((exam) => {
-        return exam.examId === examId;
-      });
-      setSelectedExam(exam);
-      setexamDurationInSeconds(exam[0].duration * 60);
+      const exam = userExamdata.find((exam) => exam.examId === examId);
+      if (exam) {
+        setSelectedExam(exam);
+        // Convert duration from minutes to seconds
+        setExamDurationInSeconds(exam.duration);
+        console.log('Exam duration (minutes):', exam.duration);
+      }
     }
-  }, [userExamdata]);
+  }, [userExamdata, examId]);
 
   const [questions, setQuestions] = useState([]);
   const { data, isLoading } = useGetQuestionsQuery(examId);
   const [score, setScore] = useState(0);
   const navigate = useNavigate();
-
-  const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
-  const { userInfo } = useSelector((state) => state.auth);
-  const [cheatingLog, setCheatingLog] = useState({
-    noFaceCount: 0,
-    multipleFaceCount: 0,
-    cellPhoneCount: 0,
-    prohibitedObjectCount: 0,
-    examId: examId,
-    username: userInfo?.name || '',
-    email: userInfo?.email || '',
-  });
-
-  useEffect(() => {
-    if (userInfo) {
-      setCheatingLog((prev) => ({
-        ...prev,
-        username: userInfo.name,
-        email: userInfo.email,
-      }));
-    }
-  }, [userInfo]);
 
   useEffect(() => {
     if (data) {
@@ -62,8 +46,19 @@ const TestPage = () => {
     }
   }, [data]);
 
+  const handleMcqCompletion = () => {
+    setIsMcqCompleted(true);
+    // Reset cheating log for coding exam
+    resetCheatingLog(examId);
+    navigate(`/exam/${examId}/codedetails`);
+  };
+
   const handleTestSubmission = async () => {
+    if (isSubmitting) return; // Prevent multiple submissions
+
     try {
+      setIsSubmitting(true);
+
       // Make sure we have the latest user info in the log
       const updatedLog = {
         ...cheatingLog,
@@ -86,25 +81,25 @@ const TestPage = () => {
       navigate('/Success');
     } catch (error) {
       console.error('Error saving cheating log:', error);
-      // Log more details about the error
-      if (error.data) {
-        console.error('Error details:', error.data);
-      }
-      if (error.status) {
-        console.error('Error status:', error.status);
-      }
-      if (error.message) {
-        console.error('Error message:', error.message);
-      }
       toast.error(
         error?.data?.message || error?.message || 'Failed to save test logs. Please try again.',
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const saveUserTestScore = () => {
     setScore(score + 1);
   };
+
+  if (isExamsLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <PageContainer title="TestPage" description="This is TestPage">
@@ -125,7 +120,7 @@ const TestPage = () => {
                   <CircularProgress />
                 ) : (
                   <MultipleChoiceQuestion
-                    submitTest={handleTestSubmission}
+                    submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
                     questions={data}
                     saveUserTestScore={saveUserTestScore}
                   />
@@ -150,7 +145,7 @@ const TestPage = () => {
                   >
                     <NumberOfQuestions
                       questionLength={questions.length}
-                      submitTest={handleTestSubmission}
+                      submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
                       examDurationInSeconds={examDurationInSeconds}
                     />
                   </Box>
@@ -167,7 +162,7 @@ const TestPage = () => {
                     alignItems="start"
                     justifyContent="center"
                   >
-                    <WebCam cheatingLog={cheatingLog} updateCheatingLog={setCheatingLog} />
+                    <WebCam cheatingLog={cheatingLog} updateCheatingLog={updateCheatingLog} />
                   </Box>
                 </BlankCard>
               </Grid>

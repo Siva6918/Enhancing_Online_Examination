@@ -35,12 +35,21 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
 
   const handleNextQuestion = () => {
     let isCorrect = false;
-    isCorrect =
-      questions[currentQuestion].options.find((option) => option.isCorrect)._id === selectedOption;
+    const currentQuestionData = questions[currentQuestion];
+
+    if (currentQuestionData && currentQuestionData.options) {
+      const correctOption = currentQuestionData.options.find((option) => option.isCorrect);
+      if (correctOption && selectedOption) {
+        isCorrect = correctOption.id === selectedOption;
+      }
+    }
+
+    console.log(isCorrect);
     if (isCorrect) {
       setScore(score + 1);
       saveUserTestScore();
     }
+
     if (isLastQuestion) {
       navigate(`/exam/${examId}/codedetails`);
     }
@@ -102,7 +111,7 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
             disabled={selectedOption === null}
             style={{ marginLeft: 'auto' }}
           >
-            {isLastQuestion ? 'Finish' : 'Next_Question'}
+            {isLastQuestion ? 'Procced to Coding' : 'Next_Question'}
           </Button>
         </Stack>
       </CardContent>
