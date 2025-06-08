@@ -6,15 +6,17 @@ import cookieParser from "cookie-parser";
 import examRoutes from "./routes/examRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import codingRoutes from "./routes/codingRoutes.js";
+import resultRoutes from "./routes/resultRoutes.js";
 import { exec } from "child_process";
 import fs from "fs";
 import { writeFileSync } from "fs";
+import path from "path";
 dotenv.config();
 connectDB();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// to parse req boy
+// to parse req body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -61,6 +63,7 @@ app.post("/run-java", (req, res) => {
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/users", examRoutes);
+app.use("/api/users", resultRoutes);
 app.use("/api/coding", codingRoutes);
 
 // we we are deploying this in production
@@ -81,7 +84,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Custom Middlewares
+// Error handling middleware - must be after all routes
 app.use(notFound);
 app.use(errorHandler);
 
