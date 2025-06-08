@@ -19,7 +19,12 @@ const port = process.env.PORT || 5000;
 
 // to parse req body
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://ai-proctored-system.vercel.app",
+    credentials: true,
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
