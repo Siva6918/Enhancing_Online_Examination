@@ -3,7 +3,10 @@ import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react';
 const baseQuery = fetchBaseQuery({ baseUrl: '' });
 
 export const apiSlice = createApi({
-  baseQuery,
+  baseQuery: fetchBaseQuery({
+    baseUrl: process.env.REACT_APP_BACKEND_URL,
+    credentials: 'include',
+  }),
   tagTypes: ['User'],
   // it like a prent to other api
   // it a build in builder

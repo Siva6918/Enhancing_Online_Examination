@@ -13,7 +13,7 @@ import Stack from '@mui/material/Stack';
 import { Container } from '@mui/material';
 import { useGetQuestionsQuery } from 'src/slices/examApiSlice';
 import { useNavigate, useParams } from 'react-router';
-import axios from 'axios';
+import axiosInstance from '../../../axios';
 import { toast } from 'react-toastify';
 
 export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest }) {
@@ -69,7 +69,7 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
         }
 
         // Send results to the backend
-        await axios.post(
+        await axiosInstance.post(
           '/api/users/results',
           {
             examId,

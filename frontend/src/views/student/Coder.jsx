@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 import Webcam from '../student/Components/WebCam';
 import {
   Button,
@@ -47,7 +47,9 @@ export default function Coder() {
     const fetchCodingQuestion = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`/api/coding/questions/exam/${examId}`);
+        const response = await axiosInstance.get(`/api/coding/questions/exam/${examId}`, {
+          withCredentials: true,
+        });
         if (response.data.success && response.data.data) {
           setQuestionId(response.data.data._id);
           setQuestion(response.data.data);
@@ -88,7 +90,7 @@ export default function Coder() {
     }
 
     try {
-      const response = await axios.post(apiUrl, { code });
+      const response = await axiosInstance.post(apiUrl, { code }, { withCredentials: true });
       console.log('API Response:', response.data); // Log the response for debugging
       setOutput(response.data); // Adjust based on actual response structure
     } catch (error) {
@@ -118,7 +120,9 @@ export default function Coder() {
 
       console.log('Submitting code with data:', codeSubmissionData);
 
-      const response = await axios.post('/api/coding/submit', codeSubmissionData);
+      const response = await axiosInstance.post('/api/coding/submit', codeSubmissionData, {
+        withCredentials: true,
+      });
       console.log('Submission response:', response.data);
 
       if (response.data.success) {

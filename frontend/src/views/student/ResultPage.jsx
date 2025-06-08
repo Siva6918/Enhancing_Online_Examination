@@ -33,7 +33,7 @@ import {
 import { Code, Visibility, VisibilityOff, Search, CheckCircle } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import DashboardCard from '../../components/shared/DashboardCard';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -56,7 +56,7 @@ const ResultPage = () => {
       try {
         setLoading(true);
         // Fetch all exams first
-        const examsResponse = await axios.get('/api/users/exam', {
+        const examsResponse = await axiosInstance.get('/api/users/exam', {
           withCredentials: true,
         });
         setExams(examsResponse.data);
@@ -64,13 +64,13 @@ const ResultPage = () => {
         // Fetch results based on user role
         if (userInfo?.role === 'teacher') {
           // For teachers, fetch all results
-          const resultsResponse = await axios.get('/api/users/results/all', {
+          const resultsResponse = await axiosInstance.get('/api/users/results/all', {
             withCredentials: true,
           });
           setResults(resultsResponse.data.data);
         } else {
           // For students, fetch only their visible results
-          const resultsResponse = await axios.get('/api/users/results/user', {
+          const resultsResponse = await axiosInstance.get('/api/users/results/user', {
             withCredentials: true,
           });
           setResults(resultsResponse.data.data);
@@ -88,7 +88,7 @@ const ResultPage = () => {
 
   const handleToggleVisibility = async (resultId) => {
     try {
-      await axios.put(
+      await axiosInstance.put(
         `/api/users/results/${resultId}/toggle-visibility`,
         {},
         {
@@ -97,7 +97,7 @@ const ResultPage = () => {
       );
       toast.success('Visibility updated successfully');
       // Refresh results
-      const response = await axios.get('/api/users/results/all', {
+      const response = await axiosInstance.get('/api/users/results/all', {
         withCredentials: true,
       });
       setResults(response.data.data);
@@ -115,7 +115,7 @@ const ResultPage = () => {
     setSelectedExam(examId);
     try {
       setLoading(true);
-      const response = await axios.get(`/api/users/results/exam/${examId}`, {
+      const response = await axiosInstance.get(`/api/users/results/exam/${examId}`, {
         withCredentials: true,
       });
       setResults(response.data.data);

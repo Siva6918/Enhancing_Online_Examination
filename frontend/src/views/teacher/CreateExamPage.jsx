@@ -7,7 +7,7 @@ import * as yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useCreateExamMutation } from '../../slices/examApiSlice.js';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 
 const examValidationSchema = yup.object({
   examName: yup.string().required('Exam Name is required'),
@@ -73,7 +73,13 @@ const CreateExamPage = () => {
         console.log('Coding Question Data:', codingQuestionData);
 
         try {
-          const codingResponse = await axios.post('/api/coding/question', codingQuestionData);
+          const codingResponse = await axiosInstance.post(
+            '/api/coding/question',
+            codingQuestionData,
+            {
+              withCredentials: true,
+            },
+          );
           console.log('Coding Response:', codingResponse.data);
 
           if (codingResponse.data.success) {
