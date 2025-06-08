@@ -11,6 +11,7 @@ import { exec } from "child_process";
 import fs from "fs";
 import { writeFileSync } from "fs";
 import path from "path";
+import cors from "cors";
 dotenv.config();
 connectDB();
 const app = express();
@@ -18,6 +19,7 @@ const port = process.env.PORT || 5000;
 
 // to parse req body
 app.use(express.json());
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
