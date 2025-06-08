@@ -10,15 +10,17 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-
 import { Container } from '@mui/material';
 import { useGetQuestionsQuery } from 'src/slices/examApiSlice';
 import { useNavigate, useParams } from 'react-router';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState(new Map());
   const navigate = useNavigate();
   const { examId } = useParams();
 
@@ -27,13 +29,13 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
 
   useEffect(() => {
     setIsLastQuestion(currentQuestion === questions.length - 1);
-  }, [currentQuestion]);
+  }, [currentQuestion, questions.length]);
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     let isCorrect = false;
     const currentQuestionData = questions[currentQuestion];
 
@@ -44,17 +46,47 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
       }
     }
 
-    console.log(isCorrect);
+    // Add answer to answers Map
+    setAnswers((prev) => {
+      const newAnswers = new Map(prev);
+      newAnswers.set(currentQuestionData._id, selectedOption);
+      return newAnswers;
+    });
+
     if (isCorrect) {
       setScore(score + 1);
       saveUserTestScore();
     }
 
     if (isLastQuestion) {
-      navigate(`/exam/${examId}/codedetails`);
+      try {
+        // Convert Map to object for API
+        const answersObject = Object.fromEntries(answers);
+
+        // Add the current answer if it's the last question
+        if (selectedOption) {
+          answersObject[currentQuestionData._id] = selectedOption;
+        }
+
+        // Send results to the backend
+        await axios.post(
+          '/api/users/results',
+          {
+            examId,
+            answers: answersObject,
+          },
+          {
+            withCredentials: true,
+          },
+        );
+
+        navigate(`/exam/${examId}/codedetails`);
+      } catch (error) {
+        console.error('Error saving results:', error);
+        toast.error('Failed to save results');
+      }
     }
 
-    // submitTest();
     setSelectedOption(null);
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
@@ -111,7 +143,7 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
             disabled={selectedOption === null}
             style={{ marginLeft: 'auto' }}
           >
-            {isLastQuestion ? 'Procced to Coding' : 'Next_Question'}
+            {isLastQuestion ? 'Proceed to Coding' : 'Next Question'}
           </Button>
         </Stack>
       </CardContent>

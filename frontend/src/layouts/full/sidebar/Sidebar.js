@@ -1,4 +1,4 @@
-import { useMediaQuery, Box, Drawer } from '@mui/material';
+import { useMediaQuery, Box, Drawer, Typography } from '@mui/material';
 import Logo from '../shared/logo/Logo';
 import SidebarItems from './SidebarItems';
 // import { Upgrade } from './Updrade';
@@ -41,9 +41,34 @@ const Sidebar = (props) => {
             {/* ------------------------------------------- */}
             {/* Logo */}
             {/* ------------------------------------------- */}
-            <Box px={3}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                px: 3,
+                py: 2,
+                width: '100%',
+                gap: 2, // adds spacing between logo and text
+              }}
+            >
               <Logo />
+
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '1.2rem',
+                  color: 'primary.main',
+                  // ml: 10, // ❌ remove this as it pushes it too far right
+                  // mt: 1,  // ❌ remove unnecessary top margin
+                  whiteSpace: 'nowrap',
+                  mr: 5,
+                }}
+              >
+                AI_EVAL_8
+              </Typography>
             </Box>
+
             <Box>
               {/* ------------------------------------------- */}
               {/* Sidebar Items */}
@@ -73,8 +98,27 @@ const Sidebar = (props) => {
       {/* ------------------------------------------- */}
       {/* Logo */}
       {/* ------------------------------------------- */}
-      <Box px={2}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: 2,
+          py: 2,
+          width: '100%',
+        }}
+      >
         <Logo />
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 600,
+            fontSize: '1.2rem',
+            color: 'primary.main',
+            ml: 1,
+          }}
+        >
+          AI EVAL_8
+        </Typography>
       </Box>
       {/* ------------------------------------------- */}
       {/* Sidebar For Mobile */}
